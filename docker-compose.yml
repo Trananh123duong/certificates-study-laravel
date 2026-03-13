@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: laravel_app
+    working_dir: /var/www
+    volumes:
+      - ./src:/var/www
+      - ./sqlite:/sqlite
+    networks:
+      - laravel
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: laravel_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - laravel
+
+  sqlite-web:
+    image: coleifer/sqlite-web
+    container_name: sqlite_web
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./sqlite:/data
+    command: sqlite_web /data/database.sqlite --host 0.0.0.0
+    networks:
+      - laravel
+
+networks:
+  laravel:
